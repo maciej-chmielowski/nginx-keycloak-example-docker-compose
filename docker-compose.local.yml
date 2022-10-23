@@ -1,0 +1,52 @@
+version: "3.9"
+services:
+  nginx:
+    image: nginx:1.15
+    container_name: nginx
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./nginx_config/default_local.conf
+        target: /etc/nginx/conf.d/default.conf
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - mynetwork
+    depends_on:
+      - keycloak_1
+
+  postgres_keycloak:
+    image: postgres
+    container_name: postgres_keycloak
+    volumes:
+      - postgres_data_keycloak:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+    ports: 
+      - 5431:5432
+    networks: 
+      - mynetwork
+  keycloak_1:
+    build:
+      context: ./keycloak/
+      dockerfile: DockerfileLocal
+    container_name: keycloak_1
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres_keycloak
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    external:
+      name: external_mynetwork
+
+volumes:
+  postgres_data:
+  postgres_data_keycloak:
+
